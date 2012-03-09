@@ -3,7 +3,14 @@
 
 run()->
   application:start(cecho),
-  paint_life(generate()).
+
+  %% Set attributes
+  cecho:cbreak(),
+  cecho:noecho(),
+
+  paint_life(generate()),
+
+  event_loop().
 
 generate()->[
     [0,0,0,0,0,0,0],
@@ -15,7 +22,17 @@ generate()->[
     [0,0,0,0,0,0,0]
   ].
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+event_loop()->
+  C = cecho:getch(),
+  case C of
+    $q ->
+      %% If we get a 'q' then exit the mover and stop cecho
+      application:stop(cecho),
+      erlang:halt();
+    _ ->
+      %% ignore anything else
+      event_loop()
+    end.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
