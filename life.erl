@@ -8,12 +8,13 @@ run()->
   cecho:cbreak(),
   cecho:noecho(),
 
-%%  cecho:mvaddstr(22,22,io_lib:format("~B",init:get_plain_arguments())),
-
-
   FIELD = generate(init:get_plain_arguments()),
   event_loop(FIELD).
 
+generate([S1,S2])->
+  {N1,_} = string:to_integer(S1),
+  {N2,_} = string:to_integer(S2),
+  lists:duplicate(N1, lists:duplicate(N2, 0));
 generate([S])->
   {N,_} = string:to_integer(S),
   lists:duplicate(N, lists:duplicate(N, 0));
