@@ -56,29 +56,70 @@ edit_loop(FIELD,X,Y) when X<0 ->
 edit_loop(FIELD,X,Y) when Y<0 ->
   edit_loop(FIELD,X,0);
 edit_loop(FIELD,X,Y)->
+
   cecho:curs_set(1),
 
   paint_life(FIELD),
-  cecho:refresh(),
   cecho:move(X,Y),
+  cecho:refresh(),
 
-  C = cecho:getch(),
-  case C of
+  C1 = cecho:getch(),
+  case C1 of
+    $q ->
+      %% If we get a 'q' then exit
+      application:stop(cecho),
+      erlang:halt();
     $e ->
+      %% Turn off editor mode
       event_loop(FIELD);
-    72 ->
-      %% Up keycode
-      edit_loop(FIELD, X-1, Y);
-    75 ->
-      %% Left keycode
-      edit_loop(FIELD, X, Y-1);
+    27 ->
+      %% Extended keycode
+      process_keycode(FIELD,X,Y);
+    $  ->
+      toggle_cell(FIELD,X,Y);
     _ ->
       edit_loop(FIELD, X, Y)
   end.
 
+toggle_cell(FIELD, X, Y)->
+  {_, [ROW|_]} = lists:split(X, FIELD),
+  NEW_ROW=setnth(Y, ROW, 1-lists:nth(Y+1, ROW)),
+  NEW_FIELD = setnth(X, FIELD, NEW_ROW),
+  edit_loop(NEW_FIELD, X, Y).
+
+%% setnth(Index, List, NewElement) -> List.
+setnth(0, [_|Rest], New) -> [New|Rest];
+setnth(I, [E|Rest], New) -> [E|setnth(I-1, Rest, New)].
+
+process_keycode(FIELD,X,Y)->
+  C2 = cecho:getch(),
+  case C2 of
+    91 ->
+      C3 = cecho:getch(),
+      case C3 of
+        65 ->
+          %% Up keycode
+          edit_loop(FIELD, X-1, Y);
+        66 ->
+          %% Down keycode
+          edit_loop(FIELD, X+1, Y);
+        67 ->
+          %% Right keycode
+          edit_loop(FIELD, X, Y+1);
+        68 ->
+          %% Left keycode
+          edit_loop(FIELD, X, Y-1);
+        _ ->
+          edit_loop(FIELD, X, Y)
+      end;
+    _ ->
+      edit_loop(FIELD, X, Y)
+    end.
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 iterate_field(FIELD)->
-  toggle(add_padding(FIELD, 7)).
+  iterate_padded_field(add_padding(FIELD, 7)).
 
 add_padding(FIELD, Ncols) ->
   [lists:duplicate(Ncols + 2, 0) |
@@ -88,17 +129,17 @@ add_padding(FIELD, Ncols) ->
 add_row_padding(ROW)->
     [0 | lists:append(ROW, [0])].
 
-toggle([X,Y,Z|W])->
-  [toggle_row(X,Y,Z)|toggle([Y,Z|W])];
-toggle(_)->
+iterate_padded_field([X,Y,Z|W])->
+  [iterate_row(X,Y,Z)|iterate_padded_field([Y,Z|W])];
+iterate_padded_field(_)->
   [].
 
-toggle_row([A,B,C|R1],[D,E,F|R2],[G,H,I|R3])->
-  [toggle_cell(A,B,C,D,E,F,G,H,I) |toggle_row([B,C|R1],[E,F|R2],[H,I|R3])];
-toggle_row(_,_,_)->
+iterate_row([A,B,C|R1],[D,E,F|R2],[G,H,I|R3])->
+  [iterate_cell(A,B,C,D,E,F,G,H,I) |iterate_row([B,C|R1],[E,F|R2],[H,I|R3])];
+iterate_row(_,_,_)->
   [].
 
-toggle_cell(A,B,C,D,E,F,G,H,I)->
+iterate_cell(A,B,C,D,E,F,G,H,I)->
   dead_or_alive(E, A+B+C+D+F+G+H+I).
 
 dead_or_alive(0, 3) -> 1;
