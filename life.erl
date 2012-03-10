@@ -8,8 +8,6 @@ run()->
   cecho:cbreak(),
   cecho:noecho(),
 
-  cecho:curs_set(0),
-
   FIELD = generate(),
   event_loop(FIELD).
 
@@ -25,6 +23,8 @@ generate()->[
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 event_loop(FIELD)->
+  cecho:curs_set(0),
+
   paint_life(FIELD),
   cecho:refresh(),
   cecho:move(0,0),
@@ -39,10 +39,42 @@ event_loop(FIELD)->
       %% If we get a ' ' then iterate
       NEW_FIELD = iterate_field(FIELD),
       event_loop(NEW_FIELD);
+    $e ->
+      %% If we get a 'e' then enter edit mode
+      edit_loop(FIELD);
     _ ->
       %% ignore anything else
       event_loop(FIELD)
     end.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+edit_loop(FIELD)->
+  edit_loop(FIELD,0,0).
+
+edit_loop(FIELD,X,Y) when X<0 ->
+  edit_loop(FIELD,0,Y);
+edit_loop(FIELD,X,Y) when Y<0 ->
+  edit_loop(FIELD,X,0);
+edit_loop(FIELD,X,Y)->
+  cecho:curs_set(1),
+
+  paint_life(FIELD),
+  cecho:refresh(),
+  cecho:move(X,Y),
+
+  C = cecho:getch(),
+  case C of
+    $e ->
+      event_loop(FIELD);
+    72 ->
+      %% Up keycode
+      edit_loop(FIELD, X-1, Y);
+    75 ->
+      %% Left keycode
+      edit_loop(FIELD, X, Y-1);
+    _ ->
+      edit_loop(FIELD, X, Y)
+  end.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 iterate_field(FIELD)->
