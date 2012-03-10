@@ -11,7 +11,7 @@ run()->
   FIELD = generate(init:get_plain_arguments()),
   event_loop(FIELD).
 
-generate([S1,S2])->
+generate([S1,S2|_])->
   {N1,_} = string:to_integer(S1),
   {N2,_} = string:to_integer(S2),
   lists:duplicate(N1, lists:duplicate(N2, 0));
@@ -129,9 +129,11 @@ process_keycode(FIELD,X,Y)->
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 iterate_field(FIELD)->
-  iterate_padded_field(add_padding(FIELD, 7)).
+  iterate_padded_field(add_padding(FIELD)).
 
-add_padding(FIELD, Ncols) ->
+add_padding(FIELD) ->
+  [A|_]=FIELD,
+  Ncols = lists:flatlength(A),
   [lists:duplicate(Ncols + 2, 0) |
     lists:append([add_row_padding(ROW) || ROW <- FIELD],
     [lists:duplicate(Ncols + 2, 0)])].
