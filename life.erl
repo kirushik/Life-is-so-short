@@ -50,13 +50,13 @@ iterate_field(FIELD)->
 
 toggle([])->
   [];
-toggle([ROW|OTHER])->
- [toggle_row(ROW) | toggle(OTHER)].
+toggle(ROWS)->
+ [toggle_row(ROW) || ROW <- ROWS].
 
 toggle_row([])->
   [];
-toggle_row([A|OTHER])->
- [1-A | toggle_row(OTHER)].
+toggle_row(CELLS)->
+ [1-A || A <- CELLS].
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -67,7 +67,6 @@ paint_life([],_X)->
   ok;
 paint_life([ROW|OTHER], X)->
   paint_row(ROW, X, 0),
-  io:format("~n"),
   paint_life(OTHER, X+1).
 
 paint_row([], _X, _Y)->
